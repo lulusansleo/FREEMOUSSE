@@ -1,0 +1,48 @@
+---
+Language:        Cpp
+BasedOnStyle:    LLVM
+
+# Indentation
+IndentWidth:            4
+TabWidth:               4
+UseTab:                 Never
+ContinuationIndentWidth: 4
+
+# Column limit
+ColumnLimit:     100
+
+# Braces
+BreakBeforeBraces: Attach
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+
+# Alignment
+AlignAfterOpenBracket:      Align
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+AlignTrailingComments:      true
+PointerAlignment:           Left
+
+# Includes
+SortIncludes:          CaseSensitive
+IncludeBlocks:         Regroup
+IncludeCategories:
+  # Project headers first
+  - Regex:    '^"(core|audio|analysis|render)/'
+    Priority: 1
+  # System / third-party
+  - Regex:    '^<'
+    Priority: 2
+
+# Spacing
+SpacesInParentheses:        false
+SpaceBeforeParens:          ControlStatements
+SpaceAfterCStyleCast:       false
+SpacesInAngles:             false
+
+# Misc
+Cpp11BracedListStyle:       true
+DerivePointerAlignment:     false
+NamespaceIndentation:       None
+---

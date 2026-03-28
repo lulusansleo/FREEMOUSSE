@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Runs before every commit.
+# Blocks the commit if any staged C++ file is not formatted.
+set -e
+STAGED=$(git diff --cached --name-only --diff-filter=ACM \
+         | grep -E '\.(cpp|hpp)$' || true)
+if [[ -z "$STAGED" ]]; then exit 0; fi
+echo "pre-commit: checking clang-format..."
+echo "$STAGED" | xargs clang-format --dry-run --Werror
+echo "pre-commit: OK"

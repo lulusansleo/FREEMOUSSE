@@ -1,0 +1,65 @@
+name: CD — macOS app bundle
+
+on:
+  push:
+    tags:
+      - "v*"          # triggers on v0.1.0, v1.2.3, etc.
+
+jobs:
+  release:
+    runs-on: macos-14
+    permissions:
+      contents: write   # needed to create the GitHub Release
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: brew install portaudio fftw aubio sdl2 ninja
+
+      - name: Configure
+        run: |
+          cmake -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Package .app bundle
+        run: |
+          APP=dist/DJVisualizer.app
+          mkdir -p "$APP/Contents/MacOS"
+          mkdir -p "$APP/Contents/Resources"
+
+          cp build/dj_visualizer "$APP/Contents/MacOS/"
+          cp -r shaders           "$APP/Contents/Resources/"
+
+          cat > "$APP/Contents/Info.plist" << 'PLIST'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+            "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>CFBundleName</key>          <string>DJVisualizer</string>
+            <key>CFBundleExecutable</key>    <string>dj_visualizer</string>
+            <key>CFBundleIdentifier</key>    <string>com.yourname.djvisualizer</string>
+            <key>CFBundleVersion</key>       <string>${{ github.ref_name }}</string>
+            <key>LSMinimumSystemVersion</key><string>13.0</string>
+            <key>NSHighResolutionCapable</key><true/>
+            <key>NSMicrophoneUsageDescription</key>
+              <string>DJ Visualizer needs microphone access to analyse live audio.</string>
+          </dict></plist>
+          PLIST
+
+          # Bundle dylibs so the app runs without Homebrew
+          dylibbundler -od -b \
+            -x "$APP/Contents/MacOS/dj_visualizer" \
+            -d "$APP/Contents/Frameworks" \
+            -p @executable_path/../Frameworks || true
+
+          cd dist && zip -r DJVisualizer-macOS-${{ github.ref_name }}.zip DJVisualizer.app
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/DJVisualizer-macOS-${{ github.ref_name }}.zip
+          generate_release_notes: true

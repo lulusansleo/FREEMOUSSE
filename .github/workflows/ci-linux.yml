@@ -1,0 +1,49 @@
+name: CI — Linux
+
+on:
+  push:
+    branches: ["dev", "main"]
+  pull_request:
+    branches: ["dev", "main"]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libportaudio-dev libfftw3-dev libaubio-dev \
+            libsdl2-dev libgl-dev \
+            cmake ninja-build \
+            clang clang-tidy clang-format
+
+      - name: Configure (Debug — enables sanitizers)
+        run: |
+          cmake -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_C_COMPILER=clang \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+            -DDV_ENABLE_ASAN=ON
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Run tests
+        run: ctest --test-dir build --output-on-failure
+
+      - name: clang-format check
+        run: |
+          find src include -name '*.cpp' -o -name '*.hpp' | \
+            xargs clang-format --dry-run --Werror
+
+      - name: clang-tidy
+        run: |
+          find src -name '*.cpp' | \
+            xargs clang-tidy \
+              -p build \
+              --warnings-as-errors='bugprone-*,clang-analyzer-*,performance-*'
