@@ -10,6 +10,9 @@ Real-time audio visualizer for live music / DJ performance.
 ./scripts/build.sh          # configure + compile
 ./build/dj_visualizer       # run
 ./build/dj_visualizer --audio-file /path/to/track.wav  # file-driven mode
+./build/dj_visualizer --audio-file /path/to/track.wav --play-audio  # file mode + audible playback
+./build/dj_visualizer --list-output-devices  # list PortAudio playback devices
+./build/dj_visualizer --audio-file /path/to/track.wav --play-audio --output-device "Headphones"
 ```
 
 ## Architecture

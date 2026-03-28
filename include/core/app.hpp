@@ -17,7 +17,8 @@ class Renderer;
 // Top-level owner — creates subsystems, wires threads, drives the run loop.
 class App {
   public:
-    explicit App(std::string audioFilePath = {});
+    explicit App(std::string audioFilePath = {}, bool playAudio = false,
+                 std::string outputDeviceQuery = {});
     ~App();
     App(const App&) = delete;
     App& operator=(const App&) = delete;
@@ -29,13 +30,19 @@ class App {
     void startFileSource();
     void stopFileSource();
     void fileSourceLoop();
+    void startFilePlayback();
+    void stopFilePlayback();
+    void filePlaybackLoop();
     void shutdownSubsystems();
 
     std::string m_audioFilePath;
+    std::string m_outputDeviceQuery;
+    bool m_playAudio{false};
     std::unique_ptr<AudioCapture> m_capture;
     std::unique_ptr<Analyzer> m_analyzer;
     std::unique_ptr<Renderer> m_renderer;
     std::thread m_fileThread;
+    std::thread m_filePlaybackThread;
     std::array<float, kCaptureFrames> m_pendingChunk{};
     std::size_t m_pendingFill{0};
     std::atomic<bool> m_running{true};
