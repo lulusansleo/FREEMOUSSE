@@ -7,7 +7,10 @@
 #define GL_GLEXT_PROTOTYPES
 #endif
 #include <SDL_opengl.h>
+#include <algorithm>
+#include <cmath>
 #include <stdexcept>
+#include <vector>
 
 namespace dv {
 
@@ -66,17 +69,68 @@ void Renderer::initOpenGL() {
 }
 
 void Renderer::drawFrame(const AudioState& s) {
-    glClearColor(0.05f, 0.05f, 0.05f, 1.f);
+    const float flash = s.onBeat ? 0.08f : 0.0f;
+    glClearColor(0.03f + flash, 0.035f + flash * 0.5f, 0.05f + flash * 0.2f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // TODO: build bar geometry from s.spectrum[], upload, draw.
-    // Each bin i → one quad scaled by s.spectrum[i].
-    // On beat: s.onBeat == true → flash, strobe, scale effect, etc.
-    (void)s;
+    // Build bar quads in normalized [0..1] coordinates.
+    constexpr int kBars = 128;
+    constexpr float kMinX = 0.02f;
+    constexpr float kMaxX = 0.98f;
+    constexpr float kBaseY = 0.03f;
+    constexpr float kTopY = 0.96f;
+    constexpr float kGap = 0.15f; // fraction of each slot reserved as spacing
+
+    std::vector<float> verts;
+    verts.reserve(kBars * 6 * 2);
+
+    const float usableW = kMaxX - kMinX;
+    const float slotW = usableW / static_cast<float>(kBars);
+    const float barW = slotW * (1.0f - kGap);
+
+    const int bins = kSpectrumBins;
+    for (int i = 0; i < kBars; ++i) {
+        const int b0 = (i * bins) / kBars;
+        const int b1 = ((i + 1) * bins) / kBars;
+        const int span = std::max(1, b1 - b0);
+
+        float e = 0.0f;
+        for (int b = b0; b < b1; ++b)
+            e += s.spectrum[b];
+        e /= static_cast<float>(span);
+
+        // Compress dynamic range and emphasize visible motion.
+        const float mag = std::clamp(std::log1p(e * 120.0f) / std::log1p(120.0f), 0.0f, 1.0f);
+        const float beatBoost = s.onBeat ? 1.12f : 1.0f;
+        const float h = std::clamp(std::pow(mag, 0.72f) * beatBoost, 0.0f, 1.0f);
+
+        const float x0 = kMinX + i * slotW + (slotW - barW) * 0.5f;
+        const float x1 = x0 + barW;
+        const float y0 = kBaseY;
+        const float y1 = y0 + h * (kTopY - y0);
+
+        // Triangle 1
+        verts.push_back(x0);
+        verts.push_back(y0);
+        verts.push_back(x1);
+        verts.push_back(y0);
+        verts.push_back(x1);
+        verts.push_back(y1);
+        // Triangle 2
+        verts.push_back(x0);
+        verts.push_back(y0);
+        verts.push_back(x1);
+        verts.push_back(y1);
+        verts.push_back(x0);
+        verts.push_back(y1);
+    }
 
     glUseProgram(m_shaderProgram);
     glBindVertexArray(m_vao);
-    // glDrawArrays(GL_TRIANGLES, 0, kSpectrumBins * 6);
+    glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, static_cast<GLsizeiptr>(verts.size() * sizeof(float)),
+                    verts.data());
+    glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(verts.size() / 2));
 }
 
 void Renderer::shutdown() {

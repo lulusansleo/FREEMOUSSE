@@ -9,6 +9,7 @@ Real-time audio visualizer for live music / DJ performance.
 ./scripts/install_deps.sh   # install system libraries
 ./scripts/build.sh          # configure + compile
 ./build/dj_visualizer       # run
+./build/dj_visualizer --audio-file /path/to/track.wav  # file-driven mode
 ```
 
 ## Architecture
