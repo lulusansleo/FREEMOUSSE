@@ -6,16 +6,17 @@ namespace dv {
 
 struct BeatResult {
     float bpm{0.f};
-    bool  onBeat{false};
+    bool onBeat{false};
 };
 
 // Wraps aubio_tempo_t. Feed mono float samples, get BPM + onset events.
 class BeatDetector {
-public:
+  public:
     BeatDetector();
     ~BeatDetector();
     BeatResult process(std::span<const float> samples);
-private:
+
+  private:
     struct Impl;
     std::unique_ptr<Impl> m_impl;
 };

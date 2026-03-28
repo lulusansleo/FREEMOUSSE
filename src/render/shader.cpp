@@ -9,19 +9,18 @@
 
 namespace dv {
 
-static std::string readFile(const std::string& path)
-{
+static std::string readFile(const std::string& path) {
     std::ifstream f(path);
-    if (!f) throw std::runtime_error("Cannot open shader: " + path);
+    if (!f)
+        throw std::runtime_error("Cannot open shader: " + path);
     std::ostringstream ss;
     ss << f.rdbuf();
     return ss.str();
 }
 
-static unsigned int compileShader(GLenum type, const std::string& src)
-{
+static unsigned int compileShader(GLenum type, const std::string& src) {
     unsigned int id = glCreateShader(type);
-    const char*  c  = src.c_str();
+    const char* c = src.c_str();
     glShaderSource(id, 1, &c, nullptr);
     glCompileShader(id);
 
@@ -35,10 +34,8 @@ static unsigned int compileShader(GLenum type, const std::string& src)
     return id;
 }
 
-unsigned int loadShaderProgram(const std::string& vertPath,
-                               const std::string& fragPath)
-{
-    unsigned int vert = compileShader(GL_VERTEX_SHADER,   readFile(vertPath));
+unsigned int loadShaderProgram(const std::string& vertPath, const std::string& fragPath) {
+    unsigned int vert = compileShader(GL_VERTEX_SHADER, readFile(vertPath));
     unsigned int frag = compileShader(GL_FRAGMENT_SHADER, readFile(fragPath));
     unsigned int prog = glCreateProgram();
     glAttachShader(prog, vert);

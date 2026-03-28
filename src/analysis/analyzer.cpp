@@ -1,13 +1,15 @@
 #include "analysis/analyzer.hpp"
-#include "analysis/fft.hpp"
+
 #include "analysis/beat_detector.hpp"
+#include "analysis/fft.hpp"
+
 #include <cmath>
 #include <thread>
 
 namespace dv {
 
 struct Analyzer::Impl {
-    FFT          fft;
+    FFT fft;
     BeatDetector beat;
     // Accumulation buffer: FFT wants kFFTSize samples but ring delivers
     // kCaptureFrames at a time — we stitch them together here.
@@ -18,40 +20,44 @@ struct Analyzer::Impl {
 Analyzer::Analyzer(RingBuffer& ring, SharedAudioState& state)
     : m_ring(ring), m_state(state), m_impl(std::make_unique<Impl>()) {}
 
-Analyzer::~Analyzer() { stop(); }
+Analyzer::~Analyzer() {
+    stop();
+}
 
-void Analyzer::start()
-{
+void Analyzer::start() {
     m_running.store(true);
     m_thread = std::thread(&Analyzer::loop, this);
 }
 
-void Analyzer::stop()
-{
+void Analyzer::stop() {
     m_running.store(false);
-    if (m_thread.joinable()) m_thread.join();
+    if (m_thread.joinable())
+        m_thread.join();
 }
 
-void Analyzer::loop()
-{
+void Analyzer::loop() {
     SampleChunk chunk;
-    AudioState  out;
+    AudioState out;
     auto& d = *m_impl;
 
     while (m_running.load()) {
         SampleChunk* front = m_ring.front();
-        if (!front) { std::this_thread::yield(); continue; }
+        if (!front) {
+            std::this_thread::yield();
+            continue;
+        }
         chunk = *front;
         m_ring.pop();
 
         // RMS
         float sum = 0.f;
-        for (float s : chunk) sum += s * s;
+        for (float s : chunk)
+            sum += s * s;
         out.rms = std::sqrt(sum / chunk.size());
 
         // Beat / BPM
         auto [bpm, onBeat] = d.beat.process(chunk);
-        out.bpm    = bpm;
+        out.bpm = bpm;
         out.onBeat = onBeat;
 
         // Accumulate into FFT window

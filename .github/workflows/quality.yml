@@ -13,8 +13,8 @@ jobs:
       - run: sudo apt-get install -y clang-format
       - name: Check formatting
         run: |
-          find src include -name '*.cpp' -o -name '*.hpp' | \
-            xargs clang-format --dry-run --Werror
+          find src include \( -name '*.cpp' -o -name '*.hpp' \) -print0 | \
+            xargs -0 clang-format --dry-run --Werror
         # Fails the PR if any file is not formatted.
         # Fix locally with: clang-format -i <file>  or  scripts/format.sh
 
@@ -26,7 +26,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update && sudo apt-get install -y \
-            libportaudio-dev libfftw3-dev libaubio-dev libsdl2-dev libgl-dev \
+            portaudio19-dev libfftw3-dev libaubio-dev libsdl2-dev libgl-dev \
             cmake ninja-build clang clang-tidy
       - name: Configure
         run: |
@@ -49,7 +49,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update && sudo apt-get install -y \
-            libportaudio-dev libfftw3-dev libaubio-dev libsdl2-dev libgl-dev \
+            portaudio19-dev libfftw3-dev libaubio-dev libsdl2-dev libgl-dev \
             cmake ninja-build clang
       - name: Configure with sanitizers
         run: |

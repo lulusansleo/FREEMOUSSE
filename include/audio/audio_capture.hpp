@@ -12,22 +12,21 @@ static constexpr int kChannels = 2; // stereo; sum to mono before analysis
 using AudioCallback = std::function<void(const float* buf, std::size_t frames)>;
 
 class AudioCapture {
-public:
+  public:
     explicit AudioCapture(AudioCallback cb);
     ~AudioCapture();
     void start();
     void stop();
     bool isRunning() const noexcept { return m_running.load(); }
-private:
-    static int paCallback(const void* input, void* output,
-                          unsigned long frameCount,
-                          const PaStreamCallbackTimeInfo* timeInfo,
-                          PaStreamCallbackFlags flags,
+
+  private:
+    static int paCallback(const void* input, void* output, unsigned long frameCount,
+                          const PaStreamCallbackTimeInfo* timeInfo, PaStreamCallbackFlags flags,
                           void* userData);
 
     struct Impl;
-    Impl*             m_impl{nullptr};
-    AudioCallback     m_cb;
+    Impl* m_impl{nullptr};
+    AudioCallback m_cb;
     std::atomic<bool> m_running{false};
 };
 

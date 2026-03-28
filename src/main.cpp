@@ -1,7 +1,6 @@
 #include "core/app.hpp"
 
-int main()
-{
+int main() {
     dv::App app;
     return app.run();
 }
