@@ -3,6 +3,8 @@
 #include "audio/ring_buffer.hpp"
 #include "analysis/analyzer.hpp"
 #include "render/renderer.hpp"
+#include <exception>
+#include <iostream>
 
 namespace dv {
 
@@ -27,11 +29,17 @@ App::~App() { shutdownSubsystems(); }
 
 int App::run()
 {
-    m_capture->start();
-    m_analyzer->start();
-    m_renderer->run(m_running); // blocks until window closed / ESC
-    shutdownSubsystems();
-    return 0;
+    try {
+        m_capture->start();
+        m_analyzer->start();
+        m_renderer->run(m_running); // blocks until window closed / ESC
+        shutdownSubsystems();
+        return 0;
+    } catch (const std::exception& e) {
+        std::cerr << "Fatal error: " << e.what() << "\n";
+        shutdownSubsystems();
+        return 1;
+    }
 }
 
 void App::shutdownSubsystems()

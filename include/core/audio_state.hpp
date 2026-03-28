@@ -21,8 +21,17 @@ struct AudioState {
 // Double-buffered atomic swap — render thread always gets a consistent
 // snapshot without blocking the analysis thread.
 struct SharedAudioState {
-    void       write(const AudioState& s) noexcept;
-    AudioState read()                     const noexcept;
+    void write(const AudioState& s) noexcept
+    {
+        int next = 1 - m_writeIdx.load(std::memory_order_relaxed);
+        m_buf[next] = s;
+        m_writeIdx.store(next, std::memory_order_release);
+    }
+
+    AudioState read() const noexcept
+    {
+        return m_buf[m_writeIdx.load(std::memory_order_acquire)];
+    }
 private:
     AudioState       m_buf[2];
     std::atomic<int> m_writeIdx{0};

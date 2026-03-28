@@ -1,7 +1,7 @@
 #pragma once
 // Thin wrapper around rigtorp/SPSCQueue.
 // Writer = RT audio thread.  Reader = analysis thread.
-#include <SPSCQueue.h>
+#include <rigtorp/SPSCQueue.h>
 #include <array>
 #include "core/audio_state.hpp"
 

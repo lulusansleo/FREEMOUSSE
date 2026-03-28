@@ -2,6 +2,7 @@
 #include <atomic>
 #include <cstddef>
 #include <functional>
+#include <portaudio.h>
 
 namespace dv {
 
@@ -18,6 +19,12 @@ public:
     void stop();
     bool isRunning() const noexcept { return m_running.load(); }
 private:
+    static int paCallback(const void* input, void* output,
+                          unsigned long frameCount,
+                          const PaStreamCallbackTimeInfo* timeInfo,
+                          PaStreamCallbackFlags flags,
+                          void* userData);
+
     struct Impl;
     Impl*             m_impl{nullptr};
     AudioCallback     m_cb;

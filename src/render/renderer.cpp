@@ -1,6 +1,9 @@
 #include "render/renderer.hpp"
 #include "render/shader.hpp"
 #include <SDL.h>
+#ifndef GL_GLEXT_PROTOTYPES
+#define GL_GLEXT_PROTOTYPES
+#endif
 #include <SDL_opengl.h>
 #include <stdexcept>
 
