@@ -2,24 +2,23 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # setup_github.sh — bootstrap the dj_visualizer GitHub repository
 #
-# What this script does:
-#   1. Checks prerequisites (git, gh CLI)
-#   2. Creates the remote repository
-#   3. Initialises local git with main + dev branches
-#   4. Pushes both branches
-#   5. Sets branch protection rules on main and dev
-#   6. Configures the repo (description, topics, squash-merge only)
-#   7. Installs local git hooks
-#
 # Usage: ./scripts/setup_github.sh [OPTIONS]
-#   --repo    NAME    Repository name          (default: dj_visualizer)
-#   --org     NAME    GitHub org (optional)    (default: your personal account)
-#   --private         Make the repo private    (default: public)
+#   --repo    NAME    Repository name (default: auto-detected from remote or cwd)
+#   --org     NAME    GitHub org      (default: your personal account)
+#   --private         Make the repo private (default: public)
 # ─────────────────────────────────────────────────────────────────────────────
 set -euo pipefail
  
-# ── Defaults ──────────────────────────────────────────────────────────────
-REPO_NAME="dj_visualizer"
+# ── Helpers ───────────────────────────────────────────────────────────────
+info()    { echo "  ✓ $*"; }
+section() { echo ""; echo "▸ $*"; }
+ 
+# ── Defaults — auto-detect repo name ─────────────────────────────────────
+if git remote get-url origin &>/dev/null; then
+  REPO_NAME=$(git remote get-url origin | sed 's|.*/||' | sed 's|\.git$||')
+else
+  REPO_NAME=$(basename "$(pwd)")
+fi
 ORG=""
 VISIBILITY="public"
  
@@ -32,10 +31,6 @@ while [[ $# -gt 0 ]]; do
     *)          echo "Unknown option: $1"; exit 1 ;;
   esac
 done
- 
-# ── Helpers ───────────────────────────────────────────────────────────────
-info()    { echo "  ✓ $*"; }
-section() { echo ""; echo "▸ $*"; }
  
 # ── 1. Prerequisites ──────────────────────────────────────────────────────
 section "Checking prerequisites"
@@ -197,4 +192,3 @@ echo "│  To ship a release:                                     │"
 echo "│    ./scripts/release.sh v0.1.0                         │"
 echo "│    # CD pipeline builds the macOS .app automatically   │"
 echo "└─────────────────────────────────────────────────────────┘"
- 
