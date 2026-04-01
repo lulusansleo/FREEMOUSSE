@@ -1,5 +1,7 @@
 #pragma once
 #include "core/audio_state.hpp"
+#include "render/bubble_system.hpp"
+#include "render/logo.hpp"
 
 #include <atomic>
 
@@ -26,8 +28,12 @@ class Renderer {
     SharedAudioState& m_state;
     SDL_Window* m_window{nullptr};
     void* m_glContext{nullptr};
-    unsigned int m_shaderProgram{0};
-    unsigned int m_vao{0}, m_vbo{0};
+    BubbleSystem m_bubbles;
+    Logo m_logo;
+    bool m_logoLoaded{false};
+    float m_timeSec{0.0f};
+    unsigned int m_lastTicksMs{0};
+    float m_logoBeatPulse{0.0f};
 };
 
 } // namespace dv

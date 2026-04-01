@@ -25,6 +25,7 @@ class App {
 
     int run(); // blocking; returns when window is closed
   private:
+    void dispatchFullChunk() noexcept;
     void pushMonoSample(float sample) noexcept;
     void pushInterleavedStereo(const float* buf, std::size_t frames) noexcept;
     void startFileSource();
@@ -47,6 +48,7 @@ class App {
     std::size_t m_pendingFill{0};
     std::atomic<bool> m_running{true};
     std::atomic<bool> m_fileSourceFailed{false};
+    std::atomic<bool> m_fileSourceDone{false};
 };
 
 } // namespace dv
