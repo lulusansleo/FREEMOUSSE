@@ -87,7 +87,7 @@ void BubbleSystem::draw(float t) {
         if (b.alpha <= 0.f)
             continue;
         inst.push_back({b.pos, b.radius * b.popScale, std::max(0.f, b.alpha), b.hueOffset,
-                        t + b.shimmerPhase});
+                        t + b.shimmerPhase, b.variant});
     }
     if (inst.empty())
         return;
@@ -124,8 +124,13 @@ void BubbleSystem::spawn(bool onBeat, float rms) {
     b.wobble = m_rand(m_rng) * 6.28f;
     b.age = 0.f;
     b.lifetime = 4.f + m_rand(m_rng) * 3.5f;
-    b.popping = false;
+    b.popping  = false;
     b.popScale = 1.f;
+    // Variant distribution: 50% classic, 20% frosted, 15% deep-glow, 15% warm
+    float rv  = m_rand(m_rng);
+    b.variant = rv < 0.50f ? 0.f :
+                rv < 0.70f ? 1.f :
+                rv < 0.85f ? 2.f : 3.f;
     m_bubbles.push_back(b);
 }
 
@@ -182,6 +187,12 @@ void BubbleSystem::initGL() {
     glVertexAttribPointer(5, 1, GL_FLOAT, GL_FALSE, stride, (void*)offsetof(BubbleInstance, time));
     glEnableVertexAttribArray(5);
     glVertexAttribDivisor(5, 1);
+
+    // location 6: variant (float)
+    glVertexAttribPointer(6, 1, GL_FLOAT, GL_FALSE, stride,
+                          (void*)offsetof(BubbleInstance, variant));
+    glEnableVertexAttribArray(6);
+    glVertexAttribDivisor(6, 1);
 
     glBindVertexArray(0);
 }

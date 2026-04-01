@@ -45,6 +45,7 @@ void Renderer::initSDL() {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24); // needed for 3D depth testing
 
     m_window = SDL_CreateWindow("DJ Visualizer", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                                 kWindowW, kWindowH, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
@@ -52,41 +53,43 @@ void Renderer::initSDL() {
         throw std::runtime_error(SDL_GetError());
 
     m_glContext = SDL_GL_CreateContext(m_window);
-    SDL_GL_SetSwapInterval(0); // vsync OFF — we drive our own frame pacing
+    SDL_GL_SetSwapInterval(0);
 }
 
 void Renderer::initOpenGL() {
     glViewport(0, 0, kWindowW, kWindowH);
     m_bubbles.init();
-    m_logo.load("assets/FREEMOUSSE LOGO.jpg");
-    m_logoLoaded = true;
+    m_character.load("assets/character.glb");
+    m_characterLoaded = true;
     m_lastTicksMs = SDL_GetTicks();
 }
 
 void Renderer::drawFrame(const AudioState& s) {
+    // Clear both colour and depth so the 3-D character renders correctly
     glClearColor(1.f, 1.f, 1.f, 1.f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     const unsigned int now = SDL_GetTicks();
     const float dt = std::min(0.05f, static_cast<float>(now - m_lastTicksMs) * 0.001f);
     m_lastTicksMs = now;
     m_timeSec += dt;
 
+    // 1. Draw 3-D character (uses depth test)
+    if (m_characterLoaded) {
+        m_character.update(dt, s, m_timeSec);
+        m_character.draw();
+    }
+
+    // 2. Clear depth so 2-D bubbles always render on top
+    glClear(GL_DEPTH_BUFFER_BIT);
+
+    // 3. Draw 2-D bubbles (no depth test)
     m_bubbles.update(dt, s, m_timeSec);
     m_bubbles.draw(m_timeSec);
-
-    if (m_logoLoaded) {
-        if (s.onBeat)
-            m_logoBeatPulse = 1.0f;
-        m_logoBeatPulse = std::max(0.0f, m_logoBeatPulse - dt * 3.6f);
-
-        const float pulse = 1.0f + 0.12f * m_logoBeatPulse;
-        m_logo.draw(pulse, pulse, 0.97f);
-    }
 }
 
 void Renderer::shutdown() {
-    m_logoLoaded = false;
+    m_characterLoaded = false;
     if (m_glContext) {
         SDL_GL_DeleteContext(m_glContext);
         m_glContext = nullptr;

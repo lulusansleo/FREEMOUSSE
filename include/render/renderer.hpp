@@ -1,7 +1,7 @@
 #pragma once
 #include "core/audio_state.hpp"
 #include "render/bubble_system.hpp"
-#include "render/logo.hpp"
+#include "render/skinned_character.hpp"
 
 #include <atomic>
 
@@ -28,12 +28,11 @@ class Renderer {
     SharedAudioState& m_state;
     SDL_Window* m_window{nullptr};
     void* m_glContext{nullptr};
-    BubbleSystem m_bubbles;
-    Logo m_logo;
-    bool m_logoLoaded{false};
-    float m_timeSec{0.0f};
+    BubbleSystem     m_bubbles;
+    SkinnedCharacter m_character;
+    bool             m_characterLoaded{false};
+    float        m_timeSec{0.0f};
     unsigned int m_lastTicksMs{0};
-    float m_logoBeatPulse{0.0f};
 };
 
 } // namespace dv

@@ -306,16 +306,21 @@ void App::filePlaybackLoop() {
             break;
         }
 
-        out.channelCount = 2;
-        out.sampleFormat = paFloat32;
-        out.suggestedLatency = devInfo->defaultLowOutputLatency;
+    out.channelCount = 2;
+    out.sampleFormat = paFloat32;
+    // Use the device's high output latency to give the audio server (Pulse/PipeWire)
+    // more headroom and reduce the chance of underflowing when the system is busy.
+    out.suggestedLatency = devInfo->defaultHighOutputLatency;
 
         if (!m_outputDeviceQuery.empty()) {
             std::cerr << "Info: using output device '" << devInfo->name << "'\n";
         }
 
-        PaError err = Pa_OpenStream(&stream, nullptr, &out, kSampleRate, kCaptureFrames, paClipOff,
-                                    nullptr, nullptr);
+    // Let PortAudio choose an appropriate internal buffer size instead of forcing
+    // a small fixed frames-per-buffer. This helps on PipeWire/PulseAudio where
+    // host buffer sizes can differ from the application's chunk size.
+    PaError err = Pa_OpenStream(&stream, nullptr, &out, kSampleRate,
+                    paFramesPerBufferUnspecified, paClipOff, nullptr, nullptr);
         if (err != paNoError) {
             std::cerr << "Warning: failed to open PortAudio output stream: " << Pa_GetErrorText(err)
                       << "; trying SDL audio backend\n";
@@ -352,8 +357,19 @@ void App::filePlaybackLoop() {
 
             const PaError writeErr = Pa_WriteStream(stream, stereo.data(), kCaptureFrames);
             if (writeErr != paNoError) {
-                std::cerr << "Warning: audio playback write failed: " << Pa_GetErrorText(writeErr)
-                          << "\n";
+                const char* txt = Pa_GetErrorText(writeErr);
+                std::string errText = txt ? txt : "(unknown)";
+                std::cerr << "Warning: audio playback write failed: " << errText << "\n";
+
+                // If this was an output underflow try a brief sleep and continue —
+                // underflows can be transient when the sink is suspended/waking or
+                // when the system is briefly busy. For other errors fall back.
+                if (errText.find("underflow") != std::string::npos ||
+                    errText.find("Underflow") != std::string::npos) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                    continue;
+                }
+
                 break;
             }
         }

@@ -21,6 +21,13 @@ FetchContent_Declare(glm
   GIT_TAG        0.9.9.8)
 FetchContent_MakeAvailable(glm)
 
+FetchContent_Declare(tinygltf
+  GIT_REPOSITORY https://github.com/syoyo/tinygltf.git
+  GIT_TAG        v2.9.3)
+set(TINYGLTF_HEADER_ONLY ON  CACHE BOOL "" FORCE)
+set(TINYGLTF_INSTALL     OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(tinygltf)
+
 find_package(OpenGL REQUIRED)
 find_package(SDL2   REQUIRED)
 include(cmake/FindPortAudio.cmake)

@@ -20,15 +20,17 @@ struct Bubble {
     float wobble;
     bool popping{false};
     float popScale{1.f};
+    float variant{0.f}; // 0=classic, 1=frosted, 2=deep-glow, 3=warm
 };
 
-// Matches shader layout (locations 1–5)
+// Matches shader layout (locations 1–6)
 struct BubbleInstance {
     glm::vec2 centre;
     float radius;
     float alpha;
     float hueOffset;
     float time;
+    float variant;
 };
 
 class BubbleSystem {
